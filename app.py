@@ -19,7 +19,7 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="GLA ATS System", page_icon=":guardsman:")
 
 # Configure Google Generative AI
-genai.configure(api_key=("AIzaSyAHrZuX0mzeKQUTtUNX1zv3dNO-m56T_nU"))
+genai.configure(api_key=("AIzaSyDq1wgsd_UjFTez-e8ptUDQlGBSAE-lmuM"))
 
 def get_gemini_response(input, pdf_content, prompt):
     model = genai.GenerativeModel('gemini-1.5-flash')
