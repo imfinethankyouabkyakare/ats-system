@@ -204,9 +204,24 @@ def create_resume():
             key="download_resume"
         )
 # Streamlit UI
-st.title("**GLA University ATS System**")
-st.subheader("About")
-st.write("This sophisticated ATS project, developed with Gemini Pro and Streamlit, seamlessly incorporates advanced features including resume match percentage, keyword analysis to identify missing criteria, and the generation of comprehensive profile summaries, enhancing the efficiency and precision of the candidate evaluation process for discerning talent acquisition professionals.")
+st.markdown("<h1 style='text-decoration: underline;'>JobFit AI – Smart Hiring Made Easy</h1>", unsafe_allow_html=True)
+st.write("🚀 AI-Powered Resume Matching
+
+Uses Google Gemini API for advanced NLP & machine learning.
+Analyzes resumes based on skills, experience, and job relevance.
+📊 Automated Ranking System
+
+Scores and ranks candidates based on suitability.
+Helps recruiters identify top talent instantly.
+⚡ Seamless & Efficient Hiring
+
+Streamlit-powered UI for an interactive experience.
+Reduces manual screening and shortens hiring time.
+📂 ATS Integration & Data-Driven Insights
+
+Easily integrates with Applicant Tracking Systems (ATS).
+Provides real-time analytics for better hiring decisions.
+✅ Find the Right Fit, Faster!")
 
 st.markdown("""
   - [Streamlit](https://streamlit.io/)
