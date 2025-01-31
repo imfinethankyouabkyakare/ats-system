@@ -205,30 +205,29 @@ def create_resume():
         )
 # Streamlit UI
 st.markdown("<h1 style='text-decoration: underline;'>JobFit AI – Smart Hiring Made Easy</h1>", unsafe_allow_html=True)
-st.write("🚀 AI-Powered Resume Matching
+st.write("🚀 **AI-Powered Resume Matching**")
 
-Uses Google Gemini API for advanced NLP & machine learning.
-Analyzes resumes based on skills, experience, and job relevance.
-📊 Automated Ranking System
+# Features
+st.write("Uses Google Gemini API for advanced NLP & machine learning.")
+st.write("Analyzes resumes based on skills, experience, and job relevance.")
 
-Scores and ranks candidates based on suitability.
-Helps recruiters identify top talent instantly.
-⚡ Seamless & Efficient Hiring
+st.write("📊 **Automated Ranking System**")
+st.write("Scores and ranks candidates based on suitability.")
+st.write("Helps recruiters identify top talent instantly.")
 
-Streamlit-powered UI for an interactive experience.
-Reduces manual screening and shortens hiring time.
-📂 ATS Integration & Data-Driven Insights
+st.write("⚡ **Seamless & Efficient Hiring**")
+st.write("Streamlit-powered UI for an interactive experience.")
+st.write("Reduces manual screening and shortens hiring time.")
 
-Easily integrates with Applicant Tracking Systems (ATS).
-Provides real-time analytics for better hiring decisions.
-✅ Find the Right Fit, Faster!")
+st.write("📂 **ATS Integration & Data-Driven Insights**")
+st.write("Easily integrates with Applicant Tracking Systems (ATS).")
+st.write("Provides real-time analytics for better hiring decisions.")
 
-st.markdown("""
-  - [Streamlit](https://streamlit.io/)
-  - [Gemini Pro](https://deepmind.google/technologies/gemini/#introduction)
-  - [makersuit API Key](https://makersuite.google.com/)
-""")
-
+# Useful Links
+st.write("🔗 **Resources**")
+st.write("• [Streamlit](https://streamlit.io/)")
+st.write("• [Gemini Pro](https://deepmind.google/technologies/gemini/#introduction)")
+st.write("• [Makersuite API Key](https://makersuite.google.com/)")
 # Sidebar for input
 st.sidebar.header("Upload Your Job Description")
 job_desc_file = st.sidebar.file_uploader("Upload Job Description (PDF)", type="pdf")
