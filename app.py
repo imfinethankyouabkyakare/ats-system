@@ -1,3 +1,4 @@
+
 import streamlit as st
 import PyPDF2
 import nltk
@@ -14,17 +15,37 @@ import google.generativeai as genai
 from io import BytesIO
 from fpdf import FPDF
 import plotly.graph_objects as go
+from docx import Document
+from docx.shared import Pt
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+import io
+
 
 # Set Streamlit page config at the top
 st.set_page_config(page_title="GLA ATS System", page_icon=":guardsman:")
 
-# Configure Google Generative AI
-genai.configure(api_key=("AIzaSyDq1wgsd_UjFTez-e8ptUDQlGBSAE-lmuM"))
+nltk.download('punkt')
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
-def get_gemini_response(input, pdf_content, prompt):
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    response = model.generate_content([input, pdf_content[0], prompt])
-    return response.text
+# Configure Google Generative AI
+genai.configure(api_key=("AIzaSyBPDNB9oDlVpJlTdEkEnc7vWv_CsAZiVQ0"))
+
+def get_gemini_response(resume_text, job_desc_text, prompt):
+    """Fetches a response from Gemini API."""
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Combine inputs into a single text blob
+        input_text = f"Resume:\n{resume_text}\n\nJob Description:\n{job_desc_text}\n\nPrompt:\n{prompt}"
+        
+        response = model.generate_content(input_text)
+        return response.text
+    except Exception as e:
+        st.error(f"Error in Gemini API: {e}")
+        return None
+
 
 def extract_text_from_pdf(pdf_file):
     reader = PyPDF2.PdfReader(pdf_file)
@@ -37,76 +58,151 @@ def extract_text_from_pdf(pdf_file):
 def input_pdf_setup(pdf_file):
     return [extract_text_from_pdf(pdf_file)]
 
-# Define the PDF class
-class PDF(FPDF):
-    def add_section(self, title, content):
-        # Add section title
-        self.set_font('Arial', 'B', 14)
-        self.cell(200, 10, title, ln=True)
-        self.set_font('Arial', '', 12)
-        self.multi_cell(0, 10, content)
-        self.ln(5)  # Add some space after each section
-
-def generate_pdf(name, email, phone, skills, education, work_experience, projects, achievements, certifications, hobbies):
-    pdf = PDF()
-    pdf.add_page()
-
-    # Header with name, email, and phone
-    pdf.set_font('Arial', 'B', 16)
-    pdf.set_text_color(0, 51, 102)  # Blue color for name
-    pdf.cell(200, 10, name, ln=True, align='C')
-
-    pdf.set_font('Arial', 'I', 12)
-    pdf.set_text_color(0, 0, 0)  # Black for email and phone
-    pdf.cell(200, 10, f'{email} | {phone}', ln=True, align='C')
-
-    pdf.ln(10)  # Space after header
-
-    # Adding sections to the PDF
-    sections = {
-        "Skills": skills,
-        "Education": education,
-        "Work Experience": work_experience,
-        "Projects": projects,
-        "Achievements": achievements,
-        "Certifications": certifications,
-        "Hobbies": hobbies
-    }
-
-    for title, content in sections.items():
-        if content:
-            pdf.add_section(title, content)
-
-    # Save to BytesIO
-    pdf_output = BytesIO()
-    pdf.output(pdf_output, 'S')
-    pdf_output.seek(0)  # Move to the beginning of the BytesIO stream
-
-    return pdf_output
-
-def generate_resume():
-    st.header("Create Your Resume")
-
-    # Taking inputs from the user
-    name = st.text_input("Enter Name")
-    email = st.text_input("Enter Email")
-    phone = st.text_input("Enter Phone Number")
-    skills = st.text_area("Enter Skills")
-    education = st.text_area("Enter Education")
-    work_experience = st.text_area("Enter Work Experience")
-    projects = st.text_area("Enter Projects")
-    achievements = st.text_area("Enter Achievements")
-    certifications = st.text_area("Enter Certifications")
-    hobbies = st.text_area("Enter Hobbies")
-
-    # Once all inputs are received
-    if st.button("Generate Resume"):
-        # Generate the PDF with structured formatting
-        pdf = generate_pdf(name, email, phone, skills, education, work_experience, projects, achievements, certifications, hobbies)
-
-        # PDF Download Link
-        st.download_button("Download PDF", pdf, file_name="resume.pdf", mime="application/pdf")
-
+def create_resume():
+    st.title("Create Your Resume")
+    
+    # Personal Information
+    st.header("Personal Information")
+    name = st.text_input("Full Name", key="name")
+    email = st.text_input("Email", key="email")
+    phone = st.text_input("Phone", key="phone")
+    linkedin = st.text_input("LinkedIn URL", key="linkedin")
+    
+    # Professional Summary
+    st.header("Professional Summary")
+    summary = st.text_area("Enter your professional summary", key="summary")
+    
+    # Projects
+    st.header("Projects")
+    num_projects = st.number_input("Number of Projects", min_value=0, max_value=10, value=1, key="num_projects")
+    projects = []
+    
+    for i in range(num_projects):
+        st.subheader(f"Project {i+1}")
+        project_name = st.text_input(f"Project Name {i+1}", key=f"project_name_{i}")
+        project_duration = st.text_input(f"Duration {i+1} (e.g., Jun 2021 – July 2021)", key=f"project_duration_{i}")
+        project_details = st.text_area(f"Project Details {i+1}", key=f"project_details_{i}")
+        projects.append({
+            'name': project_name,
+            'duration': project_duration,
+            'details': project_details.split('\n')
+        })
+    
+    # Experience
+    st.header("Work Experience")
+    num_experiences = st.number_input("Number of Experiences", min_value=0, max_value=10, value=1, key="num_experiences")
+    experiences = []
+    
+    for i in range(num_experiences):
+        st.subheader(f"Experience {i+1}")
+        company_name = st.text_input(f"Company Name {i+1}", key=f"company_name_{i}")
+        duration = st.text_input(f"Duration {i+1}", key=f"exp_duration_{i}")
+        exp_details = st.text_area(f"Experience Details {i+1}", key=f"exp_details_{i}")
+        experiences.append({
+            'company': company_name,
+            'duration': duration,
+            'details': exp_details.split('\n')
+        })
+    
+    # Education
+    st.header("Education")
+    num_education = st.number_input("Number of Education Entries", min_value=0, max_value=5, value=1, key="num_education")
+    education = []
+    
+    for i in range(num_education):
+        st.subheader(f"Education {i+1}")
+        institution = st.text_input(f"Institution Name {i+1}", key=f"institution_{i}")
+        degree = st.text_input(f"Degree/Certificate {i+1}", key=f"degree_{i}")
+        edu_duration = st.text_input(f"Duration {i+1}", key=f"edu_duration_{i}")
+        grade = st.text_input(f"Grade/Score {i+1}", key=f"grade_{i}")
+        education.append({
+            'institution': institution,
+            'degree': degree,
+            'duration': edu_duration,
+            'grade': grade
+        })
+    
+    # Skills
+    st.header("Skills")
+    skills = st.text_area("Enter your skills (one per line)", key="skills")
+    
+    # Certifications
+    st.header("Certifications")
+    certifications = st.text_area("Enter your certifications (one per line)", key="certifications")
+    
+    if st.button("Generate Resume", key="generate_resume"):
+        doc = Document()
+        
+        # Name and Contact Info
+        name_paragraph = doc.add_paragraph()
+        name_run = name_paragraph.add_run(name)
+        name_run.bold = True
+        name_run.font.size = Pt(16)
+        name_paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        
+        contact_paragraph = doc.add_paragraph()
+        contact_info = f"{email} | {phone} | {linkedin}"
+        contact_run = contact_paragraph.add_run(contact_info)
+        contact_paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        
+        # Professional Summary
+        doc.add_heading('PROFESSIONAL SUMMARY', level=1)
+        doc.add_paragraph(summary)
+        
+        # Projects
+        if projects:
+            doc.add_heading('PROJECTS', level=1)
+            for project in projects:
+                p = doc.add_paragraph()
+                p.add_run(f"{project['name']} ({project['duration']})").bold = True
+                for detail in project['details']:
+                    if detail.strip():
+                        doc.add_paragraph(detail.strip(), style='List Bullet')
+        
+        # Experience
+        if experiences:
+            doc.add_heading('EXPERIENCE', level=1)
+            for exp in experiences:
+                p = doc.add_paragraph()
+                p.add_run(f"{exp['company']} ({exp['duration']})").bold = True
+                for detail in exp['details']:
+                    if detail.strip():
+                        doc.add_paragraph(detail.strip(), style='List Bullet')
+        
+        # Education
+        if education:
+            doc.add_heading('EDUCATION', level=1)
+            for edu in education:
+                p = doc.add_paragraph()
+                p.add_run(f"{edu['institution']} ({edu['duration']})").bold = True
+                doc.add_paragraph(f"{edu['degree']} - {edu['grade']}")
+        
+        # Skills
+        if skills:
+            doc.add_heading('SKILLS', level=1)
+            skills_list = [skill.strip() for skill in skills.split('\n') if skill.strip()]
+            doc.add_paragraph(' • '.join(skills_list))
+        
+        # Certifications
+        if certifications:
+            doc.add_heading('CERTIFICATION', level=1)
+            cert_list = [cert.strip() for cert in certifications.split('\n') if cert.strip()]
+            for cert in cert_list:
+                doc.add_paragraph(cert, style='List Bullet')
+        
+        # Save document to bytes buffer
+        doc_bytes = io.BytesIO()
+        doc.save(doc_bytes)
+        doc_bytes.seek(0)
+        
+        # Create download button
+        st.download_button(
+            label="Download Resume",
+            data=doc_bytes,
+            file_name="resume.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            key="download_resume"
+        )
 # Streamlit UI
 st.title("**GLA University ATS System**")
 st.subheader("About")
@@ -125,13 +221,14 @@ job_desc_file = st.sidebar.file_uploader("Upload Job Description (PDF)", type="p
 
 #Prompts
 input_prompt1 = """
- You are an experienced Technical Human Resource Manager,your task is to review the provided resume against the job description.
-  Please share your professional evaluation on whether the candidate's profile aligns with the role.
- Highlight the strengths and weaknesses of the applicant in relation to the specified job requirements.
+ You are an experienced Technical Human Resource Manager. Your task is to review the provided resume against the job description.
+Please share your professional evaluation on whether the candidate's profile aligns with the role. Highlight the strengths and weaknesses
+of the applicant in relation to the specified job requirements.
 """
+
 input_prompt3 = """
-You are a skilled ATS (Applicant Tracking System) scanner with a deep understanding of data science and ATS functionality.
-Your task is to evaluate the resume against the provided job description and provide a match percentage.
+You are a skilled ATS (Applicant Tracking System) scanner with a deep understanding of ATS functionality.
+Your task is to evaluate the resume_pdf_content against the provided pdf_content and provide a match percentage.
 The output should be a numerical percentage value only, without any additional text or symbols (e.g., 75).
 """
 
@@ -146,12 +243,6 @@ input_prompt5 = """
 You are an skilled ATS (Applicant Tracking System) scanner with a deep understanding of data science and ATS functionality,
 your task is to evaluate the resume against the provided job description. give me the non-relevant skills if the resume matches
 the job description. The output should come as text containing all non-relevant skills mentioned in resume that are not required for given job description .
-"""
-
-input_prompt6 = """
-You are a skilled ATS (Applicant Tracking System) scanner with a deep understanding of data science and ATS functionality.
-Your task is to evaluate the resume against the provided job description and provide a plagiarism percentage.
-The output should be a numerical percentage value only, without any additional text or symbols (e.g., 75).
 """
 
 input_prompt7 = """
@@ -178,13 +269,13 @@ if job_desc_file is not None:
         resume_file = st.file_uploader("Upload Your Resume (PDF)", type="pdf")
 
         if resume_file is not None:
-            opt = st.sidebar.selectbox("Available Options", ["Choose an option","Percentage match", "Show Relevant Skills", "Non-relevant Skills", "Plagiarism Score", "Relevant Projects", "Recommended Skills", "Tell Me About the Resume" , "Tailor Resume"])
+            opt = st.sidebar.selectbox("Available Options", ["Choose an option","Percentage match" ,"Show Relevant Skills", "Non-relevant Skills", "Recommended Skills","Relevant Projects","Tell Me About the Resume"])
             resume_pdf_content = input_pdf_setup(resume_file)
             resume_text = resume_pdf_content[0]
 
             # Get match percentage
             if opt == "Percentage match":
-              response = get_gemini_response(input_prompt3, pdf_content, job_desc_text[0])
+              response = get_gemini_response(input_prompt3, resume_pdf_content, job_desc_text[0])
               # Display the percentage as a progress bar
               st.subheader("Percentage Match")
               st.progress(int(response))
@@ -202,14 +293,6 @@ if job_desc_file is not None:
               st.write("Non-Relevant Skills:")
               st.write(non_relevant_skills)
 
-            # Get plagiarism percentage
-            if opt == "Plagiarism Score":
-              response = get_gemini_response(input_prompt6, pdf_content, job_desc_text[0])
-              st.subheader("Plagiarism Score")
-              # Display the percentage as a progress bar
-              st.progress(int(response))
-              st.write(f"Match: {response}%")
-
             # Get relevant projects
             if opt == "Relevant Projects":
               relevant_projects = get_gemini_response(resume_text, pdf_content, input_prompt7)
@@ -223,11 +306,10 @@ if job_desc_file is not None:
               st.write(recommended_skills)
 
             if opt == "Tell Me About the Resume":
-              response = get_gemini_response(input_prompt1, pdf_content, job_desc_text[0])
-              st.subheader("Resume Tells")
-              st.write(response)
-
+              st.subheader("Detailed Evaluation of Resume")
+              evaluation_response = get_gemini_response(resume_pdf_content, pdf_content, input_prompt1)
+              if evaluation_response:
+                  st.write(evaluation_response)
 
     if op == "No, I have to create.":
-        generate_resume()
-
+        create_resume()
