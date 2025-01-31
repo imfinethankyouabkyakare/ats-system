@@ -223,11 +223,6 @@ st.write("📂 **ATS Integration & Data-Driven Insights**")
 st.write("Easily integrates with Applicant Tracking Systems (ATS).")
 st.write("Provides real-time analytics for better hiring decisions.")
 
-# Useful Links
-st.write("🔗 **Resources**")
-st.write("• [Streamlit](https://streamlit.io/)")
-st.write("• [Gemini Pro](https://deepmind.google/technologies/gemini/#introduction)")
-st.write("• [Makersuite API Key](https://makersuite.google.com/)")
 # Sidebar for input
 st.sidebar.header("Upload Your Job Description")
 job_desc_file = st.sidebar.file_uploader("Upload Job Description (PDF)", type="pdf")
